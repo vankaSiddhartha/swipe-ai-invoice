@@ -113,9 +113,21 @@ export default function ChatWithInvoice(): JSX.Element {
         const prompt = isLastChunk
           ? `Based on all invoice parts, answer this user question: ${inputMessage}`
           : `Process this part of the invoices. Do not answer yet.`;
+        const greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"];
+
+if (greetings.includes(inputMessage.toLowerCase())) {
+  
+        setTimeout(() => {
+         setChatMessages(prev => [...prev, { text: "Hi, how can I help you?", sender: 'ai' }]);
+setIsAITyping(false);
+
+      }, 1000);
+    return;
+}else{
+
 
 response = await chatSession.sendMessage(`
-You are an AI assistant for an internal invoice analysis tool. Please respond naturally without using symbols like *. Always start your response with a brief, friendly greeting.
+You are an AI assistant for an internal invoice analysis tool. Please respond naturally without using symbols like *. Always start your response with a brief.
 
 Context: ${chunkPrompt}
 
@@ -134,6 +146,7 @@ Provide a helpful, professional response based on the invoice information and th
         setIsAITyping(false);
       }, 1000);
     }
+  }
   };
 
   return (
