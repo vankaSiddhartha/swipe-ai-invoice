@@ -48,6 +48,7 @@ export default function ChatWithInvoice(): JSX.Element {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState<string>('');
   const [isAITyping, setIsAITyping] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>): void => {
     e.preventDefault();
@@ -72,9 +73,17 @@ export default function ChatWithInvoice(): JSX.Element {
   };
 
   const processFiles = async (newFiles: File[]): Promise<void> => {
-    setFiles(prevFiles => [...prevFiles, ...newFiles]);
-    const newTexts = await Promise.all(newFiles.map(file => pdfToText(file)));
-    setTexts(prevTexts => [...prevTexts, ...newTexts]);
+    setIsLoading(true);
+    try {
+      setFiles(prevFiles => [...prevFiles, ...newFiles]);
+      const newTexts = await Promise.all(newFiles.map(file => pdfToText(file)));
+      setTexts(prevTexts => [...prevTexts, ...newTexts]);
+    } catch (error) {
+      console.error('Error processing files:', error);
+      alert('An error occurred while processing the files. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const removeFile = (index: number): void => {
@@ -105,8 +114,15 @@ export default function ChatWithInvoice(): JSX.Element {
           ? `Based on all invoice parts, answer this user question: ${inputMessage}`
           : `Process this part of the invoices. Do not answer yet.`;
 
-        response = await chatSession.sendMessage(chunkPrompt + "\n" + prompt);
+response = await chatSession.sendMessage(`
+You are an AI assistant for an internal invoice analysis tool. Please respond naturally without using symbols like *. Always start your response with a brief, friendly greeting.
 
+Context: ${chunkPrompt}
+
+User query: ${prompt}
+
+Provide a helpful, professional response based on the invoice information and the user's question. Focus on accurate analysis and insights from the invoice data.  , then address the query.
+`);
         if (!isLastChunk) {
           // Wait for a short time between chunk sends to avoid rate limiting
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -134,7 +150,12 @@ export default function ChatWithInvoice(): JSX.Element {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            {files.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
+                <p className="mt-2 text-sm text-gray-600">Processing files...</p>
+              </div>
+            ) : files.length === 0 ? (
               <div className="text-center">
                 <ArrowUpTrayIcon className="mx-auto h-12 w-12 text-gray-400" />
                 <p className="mt-2 text-sm text-gray-600">Drag and drop your PDF invoices here, or</p>
