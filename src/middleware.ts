@@ -7,7 +7,6 @@ if (isProtectedRoute(req)) auth().protect();
 const isProtectedRoute = createRouteMatcher ( [
 '/dashboard(.*)',
 '/forum(.*)',
-'/home(.*)',
 'ai-intrview(.*)',
 ]);
 export const config = {

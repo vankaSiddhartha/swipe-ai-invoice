@@ -69,7 +69,7 @@ export default function Page() {
              Login for free
           </p>
         </div>
-<SignIn />;
+        <SignIn />
      
       </div>
     </main>
